@@ -3,6 +3,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { AuthContext } from './lib/auth';
+import { establishFleetSession } from './lib/session';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Activate from './pages/Activate';
@@ -28,10 +29,15 @@ function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // On sign in, exchange Supabase JWT for fleet API key
+      if (event === 'SIGNED_IN' && session) {
+        await establishFleetSession();
+      }
     });
 
     return () => subscription.unsubscribe();
