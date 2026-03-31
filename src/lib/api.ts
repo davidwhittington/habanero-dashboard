@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.ipvegan.com/api/v2';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://api.ipvegan.com/api/v1';
 
 async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('habanero_token');
