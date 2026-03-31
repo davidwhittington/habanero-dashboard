@@ -8,12 +8,14 @@ import MeshMonitor from './pages/MeshMonitor';
 import ClientPortal from './pages/ClientPortal';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Activate from './pages/Activate';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/activate" element={<Activate />} />
         <Route path="/portal" element={<ClientPortal />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/fleet" element={<FleetHealth />} />
