@@ -28,6 +28,15 @@ export const auth = {
       },
     }),
 
+  // SAML SSO (Okta, Entra ID, OneLogin, etc.)
+  // Customer's IT admin configures their IdP with Supabase SAML.
+  // User enters their corporate email domain, Supabase routes to the right IdP.
+  signInWithSSO: (domain: string) =>
+    supabase.auth.signInWithSSO({
+      domain,
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    }),
+
   signInWithMagicLink: (email: string) =>
     supabase.auth.signInWithOtp({
       email,

@@ -11,6 +11,8 @@ export default function Login() {
   const [params] = useSearchParams();
   const redirect = params.get('redirect') || '/dashboard';
   const [showKeyLogin, setShowKeyLogin] = useState(false);
+  const [showSSO, setShowSSO] = useState(false);
+  const [ssoDomain, setSSODomain] = useState('');
   const [apiKey, setApiKey] = useState('');
 
   const handleGoogle = async () => {
@@ -28,10 +30,19 @@ export default function Login() {
   };
 
   const handleSSO = async () => {
+    if (!ssoDomain) {
+      setShowSSO(true);
+      return;
+    }
     setLoading('sso');
     setError('');
-    const { error } = await auth.signInWithAzure();
-    if (error) { setError(error.message); setLoading(''); }
+    const { error } = await auth.signInWithSSO(ssoDomain);
+    if (error) {
+      // Fall back to Azure AD if SAML SSO not configured for this domain
+      const { error: azureError } = await auth.signInWithAzure();
+      if (azureError) { setError(azureError.message); }
+    }
+    setLoading('');
   };
 
   const handleMagicLink = async () => {
@@ -93,11 +104,27 @@ export default function Login() {
             Continue with Apple
           </button>
 
-          <button onClick={handleSSO} disabled={!!loading}
-            className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white font-medium py-3 rounded-lg hover:bg-blue-500 transition disabled:opacity-50">
-            {loading === 'sso' ? <Spinner /> : '🔐'}
-            Continue with SSO (Okta / Entra ID)
-          </button>
+          {!showSSO ? (
+            <button onClick={() => setShowSSO(true)} disabled={!!loading}
+              className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white font-medium py-3 rounded-lg hover:bg-blue-500 transition disabled:opacity-50">
+              🔐 Continue with SSO (Okta / Entra ID)
+            </button>
+          ) : (
+            <div className="bg-gray-800 rounded-lg p-4">
+              <p className="text-gray-400 text-xs mb-2">Enter your corporate email domain</p>
+              <div className="flex gap-2">
+                <input type="text" placeholder="company.okta.com" value={ssoDomain}
+                  onChange={(e) => setSSODomain(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSSO()}
+                  className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500" />
+                <button onClick={handleSSO} disabled={!ssoDomain || !!loading}
+                  className="bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                  {loading === 'sso' ? <Spinner /> : 'Go'}
+                </button>
+              </div>
+              <p className="text-gray-600 text-xs mt-2">Works with Okta, Entra ID (Azure AD), OneLogin, JumpCloud, and any SAML 2.0 provider.</p>
+            </div>
+          )}
         </div>
 
         <div className="relative my-6">
